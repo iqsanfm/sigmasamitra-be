@@ -1,0 +1,138 @@
+// 1. Definisikan provider database Anda
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// 2. Definisikan generator Prisma Client
+generator client {
+  provider = "prisma-client-js"
+}
+
+// 3. Definisikan model-model Anda
+enum UserRole {
+  STAFF
+  ADMIN
+  // Anda bisa tambahkan role lain di sini jika perlu, misal: SUPERVISOR
+}
+
+// Model untuk KLIEN
+model Klien {
+  id                String              @id @default(cuid())
+  kode_klien        String              @unique
+  nama_klien        String
+  npwp              String?             @unique
+  alamat            String?
+
+  pekerjaanBulanan  PekerjaanBulanan[]
+  pekerjaanTahunan  PekerjaanTahunan[]
+
+  @@map("klien")
+}
+
+// Model untuk pekerjaan_bulanan
+model PekerjaanBulanan {
+  id                String              @id @default(cuid())
+  masa_pajak        String
+  tahun_pajak       Int
+
+  klien             Klien               @relation(fields: [klienId], references: [id])
+  klienId           String
+
+  jenisPekerjaan    JenisPekerjaanBulanan @relation(fields: [jenisPekerjaanId], references: [id])
+  jenisPekerjaanId  String
+
+  forms             FormPekerjaanBulanan[]
+
+  @@unique([klienId, masa_pajak, tahun_pajak, jenisPekerjaanId], name: "unique_pekerjaan_bulanan_entry")
+  @@map("pekerjaan_bulanan")
+}
+
+// Model untuk pekerjaan_tahunan
+model PekerjaanTahunan {
+  id                      String   @id @default(cuid())
+  tahun_pajak             Int
+
+  klien                   Klien    @relation(fields: [klienId], references: [id])
+  klienId                 String
+
+  // Relasi ke JenisPekerjaanTahunan (BARU DITAMBAHKAN)
+  jenisPekerjaanTahunan   JenisPekerjaanTahunan @relation(fields: [jenisPekerjaanTahunanId], references: [id])
+  jenisPekerjaanTahunanId String                // Foreign key ke JenisPekerjaanTahunan (BARU DITAMBAHKAN)
+
+  forms                   FormPekerjaanTahunan[]
+
+  // Kombinasi klien, tahun pajak, dan jenis pekerjaan tahunan harus unik (DIPERBARUI)
+  @@unique([klienId, tahun_pajak, jenisPekerjaanTahunanId], name: "unique_pekerjaan_tahunan_entry")
+  @@map("pekerjaan_tahunan")
+}
+
+// Model untuk jenis_pekerjaan_bulanan
+model JenisPekerjaanBulanan {
+  id                String   @id @default(cuid())
+  nama              String   @unique // Contoh: "PPH_FINAL_UMKM", "PPH_PASAL_25"
+
+  pekerjaanBulanan  PekerjaanBulanan[]
+
+  @@map("jenis_pekerjaan_bulanan")
+}
+
+// Model untuk jenis_pekerjaan_tahunan (BARU DITAMBAHKAN)
+model JenisPekerjaanTahunan {
+  id                String   @id @default(cuid())
+  nama              String   @unique // Contoh: "SPT Tahunan Pribadi", "SPT Tahunan Badan"
+
+  // Relasi: Satu JenisPekerjaanTahunan bisa ada di banyak PekerjaanTahunan
+  pekerjaanTahunan  PekerjaanTahunan[]
+
+  @@map("jenis_pekerjaan_tahunan")
+}
+
+// Model untuk form_jenis_pekerjaan_bulanan
+model FormPekerjaanBulanan {
+  id                  String    @id @default(cuid())
+  kode_biling         String?
+  tanggal_bayar       DateTime?
+  jumlah_bayar        Decimal?
+  tanggal_lapor       DateTime?
+
+  pekerjaanBulanan    PekerjaanBulanan @relation(fields: [pekerjaanBulananId], references: [id], onDelete: Cascade)
+  pekerjaanBulananId  String
+
+  @@map("form_jenis_pekerjaan_bulanan")
+}
+
+// Model untuk form_pekerjaan_tahunan
+model FormPekerjaanTahunan {
+  id                  String    @id @default(cuid())
+  kode_biling         String?
+  tanggal_bayar       DateTime?
+  jumlah_bayar        Decimal?
+  tanggal_lapor       DateTime?
+
+  pekerjaanTahunan    PekerjaanTahunan @relation(fields: [pekerjaanTahunanId], references: [id], onDelete: Cascade)
+  pekerjaanTahunanId  String
+
+  @@map("form_pekerjaan_tahunan")
+}
+
+model Pengguna {
+  id            String   @id @default(cuid())
+  nama_lengkap  String
+  email         String   @unique // Email harus unik untuk setiap pengguna
+  password      String   // Ini akan menyimpan hash password, bukan password asli
+  role          UserRole @default(STAFF) // Peran pengguna, defaultnya STAFF
+  isActive      Boolean  @default(true)  // Untuk menandai apakah akun aktif atau tidak
+
+  createdAt     DateTime @default(now()) // Waktu pembuatan record
+  updatedAt     DateTime @updatedAt      // Waktu pembaruan record
+
+  // Jika Anda ingin PIC Staff bertanggung jawab atas Klien tertentu:
+  // klienDitangani Klien[] @relation("PICUntukKlien") // Contoh relasi (opsional)
+
+  // Jika Anda ingin mencatat siapa yang membuat/mengubah data pekerjaan:
+  // pekerjaanBulananDibuat PekerjaanBulanan[] @relation("PembuatPekerjaanBulanan") // Contoh relasi (opsional)
+  // pekerjaanTahunanDibuat PekerjaanTahunan[] @relation("PembuatPekerjaanTahunan") // Contoh relasi (opsional)
+
+  @@map("pengguna") // Nama tabel di database akan menjadi "pengguna"
+}

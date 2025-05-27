@@ -1,0 +1,221 @@
+{
+  "info": {
+    "_postman_id": "c1b2a3d4-e5f6-7890-1234-567890abcdef",
+    "name": "SigmaSamitra - Klien CRUD Tests",
+    "description": "Koleksi untuk menguji endpoint CRUD Klien pada API Backend SigmaSamitra.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Create Klien",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 201 - Created\", function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "const responseJson = pm.response.json();",
+              "pm.test(\"Response body has correct structure for new Klien\", function () {",
+              "    pm.expect(responseJson.message).to.eql(\"Klien berhasil dibuat\");",
+              "    pm.expect(responseJson.data).to.be.an('object');",
+              "    pm.expect(responseJson.data.id).to.be.a('string');",
+              "    const requestBody = JSON.parse(pm.request.body.raw);",
+              "    pm.expect(responseJson.data.kode_klien).to.eql(requestBody.kode_klien);",
+              "});",
+              "// Simpan ID klien yang baru dibuat ke collection variable",
+              "if (responseJson.data && responseJson.data.id) {",
+              "    pm.collectionVariables.set(\"createdKlienId\", responseJson.data.id);",
+              "    console.log(\"createdKlienId saved to collection variables: \" + responseJson.data.id);",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"kode_klien\": \"KLIEN-001-TEST\",\n  \"nama_klien\": \"PT Klien Percobaan\",\n  \"npwp\": \"99.888.777.6-555.000-TEST\",\n  \"alamat\": \"Jl. Coba Klien No. 1, Kota Tes\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/klien",
+          "host": ["{{baseUrl}}"],
+          "path": ["klien"]
+        },
+        "description": "Membuat data klien baru."
+      },
+      "response": []
+    },
+    {
+      "name": "Get All Klien",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200 - OK\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test(\"Response body is an array of Klien\", function () {",
+              "    const responseJson = pm.response.json();",
+              "    pm.expect(responseJson.data).to.be.an('array');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/klien",
+          "host": ["{{baseUrl}}"],
+          "path": ["klien"]
+        },
+        "description": "Mengambil daftar semua klien."
+      },
+      "response": []
+    },
+    {
+      "name": "Get Klien by ID",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200 - OK\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test(\"Response data has correct Klien ID\", function () {",
+              "    const responseJson = pm.response.json();",
+              "    pm.expect(responseJson.data.id).to.eql(pm.collectionVariables.get(\"createdKlienId\"));",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/klien/{{createdKlienId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["klien", "{{createdKlienId}}"]
+        },
+        "description": "Mengambil detail klien berdasarkan ID (CUID Prisma).\nID diambil dari collection variable 'createdKlienId' yang diset saat membuat klien."
+      },
+      "response": []
+    },
+    {
+      "name": "Update Klien by ID",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200 - OK\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test(\"Nama klien is updated as expected\", function () {",
+              "    const responseJson = pm.response.json();",
+              "    const requestBody = JSON.parse(pm.request.body.raw);",
+              "    pm.expect(responseJson.data.nama_klien).to.eql(requestBody.nama_klien);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nama_klien\": \"PT Klien Percobaan (Diperbarui)\",\n  \"alamat\": \"Jl. Coba Klien No. 1A, Kota Tes Update\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/klien/{{createdKlienId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["klien", "{{createdKlienId}}"]
+        },
+        "description": "Memperbarui data klien berdasarkan ID.\nID diambil dari collection variable 'createdKlienId'."
+      },
+      "response": []
+    },
+    {
+      "name": "Delete Klien by ID",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200 - OK or 204 - No Content\", function () {",
+              "    pm.expect(pm.response.code).to.be.oneOf([200, 204]);",
+              "});",
+              "if (pm.response.code === 200) {",
+              "    pm.test(\"Response message indicates successful Klien deletion\", function () {",
+              "        const responseJson = pm.response.json();",
+              "        pm.expect(responseJson.message).to.eql(\"Klien berhasil dihapus\");",
+              "    });",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/klien/{{createdKlienId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["klien", "{{createdKlienId}}"]
+        },
+        "description": "Menghapus klien berdasarkan ID.\nID diambil dari collection variable 'createdKlienId'."
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000/api/v1",
+      "type": "string",
+      "description": "Base URL untuk API. Sesuaikan port jika server Anda berjalan di port yang berbeda (misal 3000 jika PORT .env tidak diset atau 5000)."
+    },
+    {
+      "key": "createdKlienId",
+      "value": "",
+      "type": "string",
+      "description": "Akan diisi otomatis oleh script test pada request 'Create Klien'."
+    }
+  ]
+}

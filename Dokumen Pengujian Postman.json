@@ -1,0 +1,379 @@
+{
+  "info": {
+    "_postman_id": "a7e8c1b2-f3d4-4e5f-8a9b-c0d1e2f3a4b5",
+    "name": "SigmaSamitra BE API Tests (Lengkap)",
+    "description": "Koleksi untuk menguji API Backend SigmaSamitra, termasuk Autentikasi dan CRUD Pengguna.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Auth - Pengguna",
+      "description": "Endpoint untuk registrasi dan login pengguna/PIC.",
+      "item": [
+        {
+          "name": "Register Pengguna Baru",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 201 - Created\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test(\"Response body contains message and data\", function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson.message).to.eql(\"Registrasi pengguna berhasil\");",
+                  "    pm.expect(responseJson.data).to.be.an('object');",
+                  "    const requestBody = JSON.parse(pm.request.body.raw);",
+                  "    if (requestBody.email) {",
+                  "        pm.expect(responseJson.data.email).to.eql(requestBody.email);",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nama_lengkap\": \"Staff Registrasi Uji\",\n  \"email\": \"staff.reg.uji@example.com\",\n  \"password\": \"password123\",\n  \"role\": \"STAFF\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "register"]
+            },
+            "description": "Mendaftarkan pengguna baru ke sistem."
+          },
+          "response": []
+        },
+        {
+          "name": "Login Pengguna",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200 - OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response body contains token and user data\", function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson.message).to.eql(\"Login berhasil\");",
+                  "    pm.expect(responseJson.data.token).to.be.a('string');",
+                  "    pm.expect(responseJson.data.user).to.be.an('object');",
+                  "    const requestBody = JSON.parse(pm.request.body.raw);",
+                  "    if (requestBody.email) {",
+                  "        pm.expect(responseJson.data.user.email).to.eql(requestBody.email);",
+                  "    }",
+                  "});",
+                  "",
+                  "// Menyimpan token ke environment variable untuk request selanjutnya",
+                  "const responseJson = pm.response.json();",
+                  "if (responseJson.data && responseJson.data.token) {",
+                  "    pm.environment.set(\"authToken\", responseJson.data.token);",
+                  "    console.log(\"Auth token saved to environment variables: {{authToken}}\");",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"staff.reg.uji@example.com\",\n  \"password\": \"password123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            },
+            "description": "Login pengguna untuk mendapatkan token JWT."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Pengguna (PIC Staff) - CRUD",
+      "description": "Endpoint untuk mengelola data Pengguna/PIC Staff.",
+      "item": [
+        {
+          "name": "Create Pengguna (Admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 201 - Created\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "const responseJson = pm.response.json();",
+                  "pm.test(\"Response body has correct structure\", function () {",
+                  "    pm.expect(responseJson.message).to.eql(\"Pengguna berhasil dibuat\");",
+                  "    pm.expect(responseJson.data).to.be.an('object');",
+                  "    pm.expect(responseJson.data.id).to.be.a('string');",
+                  "});",
+                  "// Simpan ID pengguna yang baru dibuat ke collection variable",
+                  "if (responseJson.data && responseJson.data.id) {",
+                  "    pm.collectionVariables.set(\"createdPenggunaId\", responseJson.data.id);",
+                  "    console.log(\"createdPenggunaId saved to collection variables: \" + responseJson.data.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}",
+                "description": "Token JWT dari login. Kosongkan jika endpoint ini tidak diproteksi."
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nama_lengkap\": \"Staff Admin Dibuat\",\n  \"email\": \"staff.admin.dibuat@example.com\",\n  \"password\": \"passwordAdmin123\",\n  \"role\": \"ADMIN\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/pengguna",
+              "host": ["{{baseUrl}}"],
+              "path": ["pengguna"]
+            },
+            "description": "Membuat pengguna baru (biasanya oleh admin)."
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Pengguna",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200 - OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Response body is an array\", function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson.data).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}",
+                "description": "Token JWT dari login. Kosongkan jika endpoint ini tidak diproteksi."
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/pengguna",
+              "host": ["{{baseUrl}}"],
+              "path": ["pengguna"]
+            },
+            "description": "Mengambil daftar semua pengguna."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Pengguna by ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200 - OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Response data has correct ID\", function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson.data.id).to.eql(pm.collectionVariables.get(\"createdPenggunaId\"));",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}",
+                "description": "Token JWT dari login. Kosongkan jika endpoint ini tidak diproteksi."
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/pengguna/{{createdPenggunaId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["pengguna", "{{createdPenggunaId}}"]
+            },
+            "description": "Mengambil detail pengguna berdasarkan ID. ID diambil dari collection variable 'createdPenggunaId' yang diset saat membuat pengguna."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Pengguna by ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200 - OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Nama lengkap is updated\", function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    const requestBody = JSON.parse(pm.request.body.raw);",
+                  "    pm.expect(responseJson.data.nama_lengkap).to.eql(requestBody.nama_lengkap);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}",
+                "description": "Token JWT dari login. Kosongkan jika endpoint ini tidak diproteksi."
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nama_lengkap\": \"Staff Admin Dibuat (Updated)\",\n  \"isActive\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/pengguna/{{createdPenggunaId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["pengguna", "{{createdPenggunaId}}"]
+            },
+            "description": "Memperbarui data pengguna berdasarkan ID. ID diambil dari collection variable 'createdPenggunaId'."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Pengguna by ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200 - OK or 204 - No Content\", function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 204]);",
+                  "});",
+                  "if (pm.response.code === 200) {",
+                  "    pm.test(\"Response message indicates successful deletion\", function () {",
+                  "        const responseJson = pm.response.json();",
+                  "        pm.expect(responseJson.message).to.eql(\"Pengguna berhasil dihapus\");",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}",
+                "description": "Token JWT dari login. Kosongkan jika endpoint ini tidak diproteksi."
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/pengguna/{{createdPenggunaId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["pengguna", "{{createdPenggunaId}}"]
+            },
+            "description": "Menghapus pengguna berdasarkan ID. ID diambil dari collection variable 'createdPenggunaId'."
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000/api/v1",
+      "type": "string",
+      "description": "Base URL untuk API. Ganti port jika server Anda berjalan di port berbeda (misal 3000 jika PORT .env tidak diset atau 5000)."
+    },
+    {
+      "key": "createdPenggunaId",
+      "value": "",
+      "type": "string",
+      "description": "Akan diisi otomatis oleh request 'Create Pengguna (Admin)'."
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{authToken}}",
+        "type": "string"
+      }
+    ]
+  }
+}

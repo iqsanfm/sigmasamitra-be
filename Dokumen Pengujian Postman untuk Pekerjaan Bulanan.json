@@ -1,0 +1,252 @@
+{
+  "info": {
+    "_postman_id": "f5g6h7i8-j9k0-1234-5678-90abcdef1234",
+    "name": "SigmaSamitra - Pekerjaan Bulanan CRUD Tests",
+    "description": "Koleksi untuk menguji endpoint CRUD Pekerjaan Bulanan pada API Backend SigmaSamitra.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Create Pekerjaan Bulanan",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 201 - Created\", function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "const responseJson = pm.response.json();",
+              "pm.test(\"Response body has correct structure for new Pekerjaan Bulanan\", function () {",
+              "    pm.expect(responseJson.message).to.eql(\"Pekerjaan Bulanan berhasil dibuat\");",
+              "    pm.expect(responseJson.data).to.be.an('object');",
+              "    pm.expect(responseJson.data.id).to.be.a('string');",
+              "    const requestBody = JSON.parse(pm.request.body.raw);",
+              "    pm.expect(responseJson.data.klienId).to.eql(pm.collectionVariables.get(\"sampleKlienId\"));",
+              "    pm.expect(responseJson.data.jenisPekerjaanId).to.eql(pm.collectionVariables.get(\"sampleJenisPekerjaanBulananId\"));",
+              "});",
+              "// Simpan ID yang baru dibuat ke collection variable",
+              "if (responseJson.data && responseJson.data.id) {",
+              "    pm.collectionVariables.set(\"createdPekerjaanBulananId\", responseJson.data.id);",
+              "    console.log(\"createdPekerjaanBulananId saved: \" + responseJson.data.id);",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"klienId\": \"{{sampleKlienId}}\",\n  \"masa_pajak\": \"07\",\n  \"tahun_pajak\": 2024,\n  \"jenisPekerjaanId\": \"{{sampleJenisPekerjaanBulananId}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/pekerjaan-bulanan",
+          "host": ["{{baseUrl}}"],
+          "path": ["pekerjaan-bulanan"]
+        },
+        "description": "Membuat data Pekerjaan Bulanan baru. Pastikan {{sampleKlienId}} dan {{sampleJenisPekerjaanBulananId}} sudah diisi dengan ID yang valid di Collection Variables."
+      },
+      "response": []
+    },
+    {
+      "name": "Get All Pekerjaan Bulanan",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200 - OK\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test(\"Response body is an array\", function () {",
+              "    const responseJson = pm.response.json();",
+              "    pm.expect(responseJson.data).to.be.an('array');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/pekerjaan-bulanan?tahun_pajak=2024&klienId={{sampleKlienId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["pekerjaan-bulanan"],
+          "query": [
+            {
+              "key": "tahun_pajak",
+              "value": "2024",
+              "description": "(Opsional) Filter berdasarkan tahun pajak"
+            },
+            {
+              "key": "klienId",
+              "value": "{{sampleKlienId}}",
+              "description": "(Opsional) Filter berdasarkan ID Klien. Ganti dengan ID Klien valid jika ingin filter."
+            },
+            {
+              "key": "masa_pajak",
+              "value": "07",
+              "description": "(Opsional) Filter berdasarkan masa pajak",
+              "disabled": true
+            }
+          ]
+        },
+        "description": "Mengambil daftar semua Pekerjaan Bulanan. Bisa difilter menggunakan query parameters (contoh: tahun_pajak, klienId, masa_pajak)."
+      },
+      "response": []
+    },
+    {
+      "name": "Get Pekerjaan Bulanan by ID",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200 - OK\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test(\"Response data has correct ID\", function () {",
+              "    const responseJson = pm.response.json();",
+              "    pm.expect(responseJson.data.id).to.eql(pm.collectionVariables.get(\"createdPekerjaanBulananId\"));",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/pekerjaan-bulanan/{{createdPekerjaanBulananId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["pekerjaan-bulanan", "{{createdPekerjaanBulananId}}"]
+        },
+        "description": "Mengambil detail Pekerjaan Bulanan berdasarkan ID.\nID diambil dari collection variable 'createdPekerjaanBulananId'."
+      },
+      "response": []
+    },
+    {
+      "name": "Update Pekerjaan Bulanan by ID",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200 - OK\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test(\"Masa pajak is updated as expected\", function () {",
+              "    const responseJson = pm.response.json();",
+              "    const requestBody = JSON.parse(pm.request.body.raw);",
+              "    pm.expect(responseJson.data.masa_pajak).to.eql(requestBody.masa_pajak);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"masa_pajak\": \"08\",\n  \"tahun_pajak\": 2024\n  \n  // Anda bisa juga menyertakan klienId dan jenisPekerjaanId jika ingin diubah\n  // \"klienId\": \"{{sampleKlienId}}\", \n  // \"jenisPekerjaanId\": \"{{sampleJenisPekerjaanBulananId}}\" \n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/pekerjaan-bulanan/{{createdPekerjaanBulananId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["pekerjaan-bulanan", "{{createdPekerjaanBulananId}}"]
+        },
+        "description": "Memperbarui data Pekerjaan Bulanan berdasarkan ID.\nID diambil dari collection variable 'createdPekerjaanBulananId'."
+      },
+      "response": []
+    },
+    {
+      "name": "Delete Pekerjaan Bulanan by ID",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200 - OK or 204 - No Content\", function () {",
+              "    pm.expect(pm.response.code).to.be.oneOf([200, 204]);",
+              "});",
+              "if (pm.response.code === 200) {",
+              "    pm.test(\"Response message indicates successful deletion\", function () {",
+              "        const responseJson = pm.response.json();",
+              "        pm.expect(responseJson.message).to.eql(\"Pekerjaan Bulanan berhasil dihapus\");",
+              "    });",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/pekerjaan-bulanan/{{createdPekerjaanBulananId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["pekerjaan-bulanan", "{{createdPekerjaanBulananId}}"]
+        },
+        "description": "Menghapus Pekerjaan Bulanan berdasarkan ID.\nID diambil dari collection variable 'createdPekerjaanBulananId'."
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000/api/v1",
+      "type": "string",
+      "description": "Base URL untuk API. Sesuaikan port jika server Anda berjalan di port yang berbeda (misal 3000 jika PORT .env tidak diset atau 5000)."
+    },
+    {
+      "key": "createdPekerjaanBulananId",
+      "value": "",
+      "type": "string",
+      "description": "Akan diisi otomatis oleh script test pada request 'Create Pekerjaan Bulanan'."
+    },
+    {
+      "key": "sampleKlienId",
+      "value": "ISI_DENGAN_ID_KLIEN_VALID",
+      "type": "string",
+      "description": "PENTING: Ganti dengan ID Klien yang valid dari database Anda setelah membuat Klien melalui endpoint Klien atau langsung di DB."
+    },
+    {
+      "key": "sampleJenisPekerjaanBulananId",
+      "value": "ISI_DENGAN_ID_JENIS_PEKERJAAN_BULANAN_VALID",
+      "type": "string",
+      "description": "PENTING: Ganti dengan ID Jenis Pekerjaan Bulanan yang valid setelah membuatnya melalui endpoint terkait atau langsung di DB."
+    }
+  ]
+}
