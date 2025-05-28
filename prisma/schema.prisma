@@ -9,6 +9,18 @@ generator client {
   provider = "prisma-client-js"
 }
 
+// Tambahkan enum ini di bagian atas file schema.prisma Anda,
+// atau di tempat Anda biasa mendefinisikan enum lainnya.
+enum StatusPekerjaan {
+  BARU // Tugas baru dibuat, belum dikerjakan
+  DALAM_PROSES // Sedang aktif dikerjakan oleh PIC
+  REVIEW // Perlu ditinjau (misalnya oleh atasan atau menunggu konfirmasi klien)
+  PERLU_REVISI // Ada yang perlu diperbaiki setelah review
+  SELESAI // Semua proses sudah selesai dan final
+  DITUNDA // Pekerjaan ditunda sementara
+  DIBATALKAN // Pekerjaan dibatalkan
+}
+
 // 3. Definisikan model-model Anda
 enum UserRole {
   STAFF
@@ -17,32 +29,40 @@ enum UserRole {
 }
 
 // Model untuk KLIEN
-model Klien {
-  id                String              @id @default(cuid())
-  kode_klien        String              @unique
-  nama_klien        String
-  npwp              String?             @unique
-  alamat            String?
+// prisma/schema.prisma
 
-  pekerjaanBulanan  PekerjaanBulanan[]
-  pekerjaanTahunan  PekerjaanTahunan[]
+model Klien {
+  id         String  @id @default(cuid())
+  kode_klien String  @unique
+  nama_klien String
+  npwp       String? @unique
+  alamat     String?
+
+  pekerjaanBulanan           PekerjaanBulanan[]
+  pekerjaanTahunan           PekerjaanTahunan[]
+  daftarProject              Project[]              @relation("ProyekDariKlien")
+  // HAPUS ATAU SESUAIKAN BARIS INI JIKA "FormSP2DKDariKlien" TIDAK DIGUNAKAN DI MODEL FormSP2DK ANDA:
+  // daftarFormSP2DK           FormSP2DK[]              @relation("FormSP2DKDariKlien") 
+  daftarFormPemeriksaanPajak FormPemeriksaanPajak[] @relation("PemeriksaanUntukKlien")
+
+  formsSP2DKExcel FormSP2DK[] @relation("KlienUntukFormSP2DKExcel") // Ini yang seharusnya cocok dengan FormSP2DK (form_sp2dk_excel)
 
   @@map("klien")
 }
 
 // Model untuk pekerjaan_bulanan
 model PekerjaanBulanan {
-  id                String              @id @default(cuid())
-  masa_pajak        String
-  tahun_pajak       Int
+  id          String @id @default(cuid())
+  masa_pajak  String
+  tahun_pajak Int
 
-  klien             Klien               @relation(fields: [klienId], references: [id])
-  klienId           String
+  klien   Klien  @relation(fields: [klienId], references: [id])
+  klienId String
 
-  jenisPekerjaan    JenisPekerjaanBulanan @relation(fields: [jenisPekerjaanId], references: [id])
-  jenisPekerjaanId  String
+  jenisPekerjaan   JenisPekerjaanBulanan @relation(fields: [jenisPekerjaanId], references: [id])
+  jenisPekerjaanId String
 
-  forms             FormPekerjaanBulanan[]
+  forms FormPekerjaanBulanan[]
 
   @@unique([klienId, masa_pajak, tahun_pajak, jenisPekerjaanId], name: "unique_pekerjaan_bulanan_entry")
   @@map("pekerjaan_bulanan")
@@ -50,17 +70,17 @@ model PekerjaanBulanan {
 
 // Model untuk pekerjaan_tahunan
 model PekerjaanTahunan {
-  id                      String   @id @default(cuid())
-  tahun_pajak             Int
+  id          String @id @default(cuid())
+  tahun_pajak Int
 
-  klien                   Klien    @relation(fields: [klienId], references: [id])
-  klienId                 String
+  klien   Klien  @relation(fields: [klienId], references: [id])
+  klienId String
 
   // Relasi ke JenisPekerjaanTahunan (BARU DITAMBAHKAN)
   jenisPekerjaanTahunan   JenisPekerjaanTahunan @relation(fields: [jenisPekerjaanTahunanId], references: [id])
-  jenisPekerjaanTahunanId String                // Foreign key ke JenisPekerjaanTahunan (BARU DITAMBAHKAN)
+  jenisPekerjaanTahunanId String // Foreign key ke JenisPekerjaanTahunan (BARU DITAMBAHKAN)
 
-  forms                   FormPekerjaanTahunan[]
+  forms FormPekerjaanTahunan[]
 
   // Kombinasi klien, tahun pajak, dan jenis pekerjaan tahunan harus unik (DIPERBARUI)
   @@unique([klienId, tahun_pajak, jenisPekerjaanTahunanId], name: "unique_pekerjaan_tahunan_entry")
@@ -69,70 +89,207 @@ model PekerjaanTahunan {
 
 // Model untuk jenis_pekerjaan_bulanan
 model JenisPekerjaanBulanan {
-  id                String   @id @default(cuid())
-  nama              String   @unique // Contoh: "PPH_FINAL_UMKM", "PPH_PASAL_25"
+  id   String @id @default(cuid())
+  nama String @unique // Contoh: "PPH_FINAL_UMKM", "PPH_PASAL_25"
 
-  pekerjaanBulanan  PekerjaanBulanan[]
+  pekerjaanBulanan PekerjaanBulanan[]
 
   @@map("jenis_pekerjaan_bulanan")
 }
 
 // Model untuk jenis_pekerjaan_tahunan (BARU DITAMBAHKAN)
 model JenisPekerjaanTahunan {
-  id                String   @id @default(cuid())
-  nama              String   @unique // Contoh: "SPT Tahunan Pribadi", "SPT Tahunan Badan"
+  id   String @id @default(cuid())
+  nama String @unique // Contoh: "SPT Tahunan Pribadi", "SPT Tahunan Badan"
 
   // Relasi: Satu JenisPekerjaanTahunan bisa ada di banyak PekerjaanTahunan
-  pekerjaanTahunan  PekerjaanTahunan[]
+  pekerjaanTahunan PekerjaanTahunan[]
 
   @@map("jenis_pekerjaan_tahunan")
 }
 
 // Model untuk form_jenis_pekerjaan_bulanan
 model FormPekerjaanBulanan {
-  id                  String    @id @default(cuid())
-  kode_biling         String?
-  tanggal_bayar       DateTime?
-  jumlah_bayar        Decimal?
-  tanggal_lapor       DateTime?
+  id                 String           @id @default(cuid())
+  pekerjaanBulanan   PekerjaanBulanan @relation(fields: [pekerjaanBulananId], references: [id], onDelete: Cascade)
+  pekerjaanBulananId String
 
-  pekerjaanBulanan    PekerjaanBulanan @relation(fields: [pekerjaanBulananId], references: [id], onDelete: Cascade)
-  pekerjaanBulananId  String
+  kode_biling   String?
+  tanggal_bayar DateTime?
+  jumlah_bayar  Decimal?
+  tanggal_lapor DateTime?
 
-  @@map("form_jenis_pekerjaan_bulanan")
+  // Field baru yang ditambahkan:
+  no_pengawasan_tugas String? // Nomor untuk pengawasan tugas
+  no_urut_klien       Int? // Nomor urut terkait klien untuk form ini (misalnya jika satu pekerjaan bulanan bisa punya banyak form dengan urutan tertentu)
+  status              StatusPekerjaan? @default(BARU) // Status pekerjaan form ini, defaultnya "BARU"
+
+  // Timestamps opsional tapi sangat berguna
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("form_jenis_pekerjaan_bulanan") // Nama tabel ini sesuai permintaan Anda sebelumnya
 }
 
 // Model untuk form_pekerjaan_tahunan
-model FormPekerjaanTahunan {
-  id                  String    @id @default(cuid())
-  kode_biling         String?
-  tanggal_bayar       DateTime?
-  jumlah_bayar        Decimal?
-  tanggal_lapor       DateTime?
+// prisma/schema.prisma
 
-  pekerjaanTahunan    PekerjaanTahunan @relation(fields: [pekerjaanTahunanId], references: [id], onDelete: Cascade)
-  pekerjaanTahunanId  String
+model FormPekerjaanTahunan {
+  id                 String           @id @default(cuid())
+  pekerjaanTahunan   PekerjaanTahunan @relation(fields: [pekerjaanTahunanId], references: [id], onDelete: Cascade)
+  pekerjaanTahunanId String
+
+  kode_biling   String?
+  tanggal_bayar DateTime?
+  jumlah_bayar  Decimal?
+  tanggal_lapor DateTime?
+
+  // Field baru yang ditambahkan:
+  no_pengawasan_tugas String? // Nomor untuk pengawasan tugas
+  no_urut_klien       Int? // Nomor urut terkait klien untuk form ini
+  status              StatusPekerjaan? @default(BARU) // Status pekerjaan form ini, defaultnya "BARU"
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@map("form_pekerjaan_tahunan")
 }
 
+// prisma/schema.prisma
+
+// prisma/schema.prisma
+
+model FormSP2DK {
+  id String @id @default(cuid())
+
+  no_pengawasan_tugas    String? // Dari Excel "NO. PENGAWASAN TUGAS"
+  no_urut_klien_internal String? // Dari Excel "NO. URUT KLIEN"
+
+  klienId String // Akan diisi dari Klien terkait
+  klien   Klien  @relation("KlienUntukFormSP2DKExcel", fields: [klienId], references: [id])
+
+  staffPjId String // Staff PJ Pajak dan Akuntansi
+  staffPj   Pengguna @relation("PjUntukFormSP2DKExcel", fields: [staffPjId], references: [id])
+
+  staffAdHocId String? // Staff Ad Hoc
+  staffAdHoc   Pengguna? @relation("AdHocUntukFormSP2DKExcel", fields: [staffAdHocId], references: [id])
+
+  no_kontrak  String? // NO. KONTRAK
+  tgl_kontrak DateTime? // TGL KONTRAK
+
+  // Kolom SP2DK, SPHP, LHP dari Excel
+  no_sp2dk  String   @unique // Dari Excel "NO. SP2" (kita asumsikan ini adalah nomor SP2DK)
+  tgl_sp2dk DateTime // Dari Excel "TGL SP2" (kita asumsikan ini adalah tanggal SP2DK)
+
+  no_sphp  String?   @unique // NO. SPHP (jika ada, unik)
+  tgl_sphp DateTime? // TGL SPHP
+
+  no_lhp  String?   @unique // NO. LHP (jika ada, unik)
+  tgl_lhp DateTime? // TGL LHP
+
+  // Kolom Tgl Bayar, Tgl Lapor, dan Status dari Excel
+  tgl_bayar DateTime? // TGL BAYAR
+  tgl_lapor DateTime? // TGL LAPOR
+  status    StatusPekerjaan @default(BARU) // STATUS (menggunakan enum yang ada)
+
+  catatan_sp2dk String? @db.Text // Catatan tambahan khusus untuk form SP2DK ini
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("form_sp2dk_excel") // Memberi nama tabel yang berbeda untuk menghindari konflik jika ada model serupa
+}
+
+// prisma/schema.prisma
+
+model FormPemeriksaanPajak {
+  id                     String  @id @default(cuid())
+  no_pengawasan_tugas    String? // Dari Excel "NO. PENGAWASAN TUGAS"
+  no_urut_klien_internal String? // Dari Excel "NO. URUT KLIEN"
+
+  klienId String
+  klien   Klien  @relation("PemeriksaanUntukKlien", fields: [klienId], references: [id])
+
+  staffPjId String // Staff PJ Pajak dan Akuntansi
+  staffPj   Pengguna @relation("PjUntukPemeriksaanPajak", fields: [staffPjId], references: [id])
+
+  staffAdHocId String? // Staff Ad Hoc
+  staffAdHoc   Pengguna? @relation("AdHocUntukPemeriksaanPajak", fields: [staffAdHocId], references: [id])
+
+  no_kontrak  String?
+  tgl_kontrak DateTime?
+
+  no_sp2  String   @unique // Nomor SP2 (Surat Pemberitahuan Pemeriksaan), diasumsikan unik
+  tgl_sp2 DateTime // Tanggal SP2
+
+  no_sphp  String?   @unique // Nomor SPHP (Surat Pemberitahuan Hasil Pemeriksaan), jika ada, unik
+  tgl_sphp DateTime? // Tanggal SPHP
+
+  no_lhp  String?   @unique // Nomor LHP (Laporan Hasil Pemeriksaan), jika ada, unik
+  tgl_lhp DateTime? // Tanggal LHP
+
+  // Kolom lain dari Excel yang mungkin relevan (jika ada, tambahkan di sini)
+  // no_bap_pemb             String?   // Contoh: Nomor Berita Acara Pembahasan
+  // tgl_bap_pemb            DateTime? // Contoh: Tanggal Berita Acara Pembahasan
+
+  status StatusPekerjaan @default(BARU) // Dari Excel "STATUS"
+
+  catatan String? // Catatan tambahan untuk pemeriksaan ini
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("form_pemeriksaan_pajak")
+}
+
+// prisma/schema.prisma
+
+model Project {
+  id                      String    @id @default(cuid())
+  nama_project            String    @unique
+  klienId                 String
+  klien                   Klien     @relation("ProyekDariKlien", fields: [klienId], references: [id])
+  picId                   String    // PIC utama untuk proyek ini
+  pic                     Pengguna  @relation("PicUntukProject", fields: [picId], references: [id])
+  deskripsi               String?
+  tanggal_mulai           DateTime?
+  tanggal_target_selesai  DateTime?
+  tanggal_aktual_selesai  DateTime?
+  status_project          StatusPekerjaan @default(BARU) // Menggunakan enum StatusPekerjaan
+  nilai_project           Decimal?  // Opsional, jika ada nilai kontrak/proyek
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
+  @@map("projects")
+}
+
+// prisma/schema.prisma
+
+// prisma/schema.prisma
+
 model Pengguna {
-  id            String   @id @default(cuid())
-  nama_lengkap  String
-  email         String   @unique // Email harus unik untuk setiap pengguna
-  password      String   // Ini akan menyimpan hash password, bukan password asli
-  role          UserRole @default(STAFF) // Peran pengguna, defaultnya STAFF
-  isActive      Boolean  @default(true)  // Untuk menandai apakah akun aktif atau tidak
+  id           String   @id @default(cuid())
+  nama_lengkap String
+  email        String   @unique
+  password     String
+  role         UserRole @default(STAFF)
+  isActive     Boolean  @default(true)
 
-  createdAt     DateTime @default(now()) // Waktu pembuatan record
-  updatedAt     DateTime @updatedAt      // Waktu pembaruan record
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  // Jika Anda ingin PIC Staff bertanggung jawab atas Klien tertentu:
-  // klienDitangani Klien[] @relation("PICUntukKlien") // Contoh relasi (opsional)
+  // Relasi yang sudah benar:
+  projectSebagaiPic       Project[]              @relation("PicUntukProject")
+  pemeriksaanSebagaiPj    FormPemeriksaanPajak[] @relation("PjUntukPemeriksaanPajak")
+  pemeriksaanSebagaiAdHoc FormPemeriksaanPajak[] @relation("AdHocUntukPemeriksaanPajak")
 
-  // Jika Anda ingin mencatat siapa yang membuat/mengubah data pekerjaan:
-  // pekerjaanBulananDibuat PekerjaanBulanan[] @relation("PembuatPekerjaanBulanan") // Contoh relasi (opsional)
-  // pekerjaanTahunanDibuat PekerjaanTahunan[] @relation("PembuatPekerjaanTahunan") // Contoh relasi (opsional)
+  formSP2DKExcelSebagaiPj    FormSP2DK[] @relation("PjUntukFormSP2DKExcel") // Ini yang cocok dengan FormSP2DK (form_sp2dk_excel)
+  formSP2DKExcelSebagaiAdHoc FormSP2DK[] @relation("AdHocUntukFormSP2DKExcel") // Ini yang cocok dengan FormSP2DK (form_sp2dk_excel)
 
-  @@map("pengguna") // Nama tabel di database akan menjadi "pengguna"
+  // HAPUS ATAU SESUAIKAN BARIS-BARIS DI BAWAH INI JIKA NAMA RELASINYA TIDAK COCOK/TIDAK ADA PASANGANNYA
+  // DI MODEL FormSP2DK YANG ANDA DEFINISIKAN (YANG DI-MAP KE form_sp2dk_excel):
+  // sp2dkSebagaiPj            FormSP2DK[]              @relation("StaffPjUntukSP2DK") 
+  // sp2dkSebagaiAdHoc         FormSP2DK[]              @relation("StaffAdHocUntukSP2DK")
+
+  @@map("pengguna")
 }

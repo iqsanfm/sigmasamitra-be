@@ -1,0 +1,263 @@
+{
+  "info": {
+    "_postman_id": "a1b2c3d4-e5f6-7890-1234-112233445566",
+    "name": "SigmaSamitra - Form Pemeriksaan Pajak CRUD",
+    "description": "Koleksi untuk menguji endpoint CRUD Form Pemeriksaan Pajak pada API Backend SigmaSamitra.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Create Form Pemeriksaan Pajak",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 201 - Created\", function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "const responseJson = pm.response.json();",
+              "pm.test(\"Response body has correct structure and message\", function () {",
+              "    pm.expect(responseJson.message).to.eql(\"Form Pemeriksaan Pajak berhasil dibuat\");",
+              "    pm.expect(responseJson.data).to.be.an('object');",
+              "    pm.expect(responseJson.data.id).to.be.a('string');",
+              "    const requestBody = JSON.parse(pm.request.body.raw);",
+              "    pm.expect(responseJson.data.no_sp2).to.eql(requestBody.no_sp2);",
+              "});",
+              "// Simpan ID yang baru dibuat ke collection variable",
+              "if (responseJson.data && responseJson.data.id) {",
+              "    pm.collectionVariables.set(\"createdFormPemeriksaanPajakId\", responseJson.data.id);",
+              "    console.log(\"createdFormPemeriksaanPajakId saved: \" + responseJson.data.id);",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"klienId\": \"{{sampleKlienId_forPemeriksaan}}\",\n  \"staffPjId\": \"{{sampleStaffPjId_forPemeriksaan}}\",\n  \"staffAdHocId\": \"{{sampleStaffAdHocId_forPemeriksaan}}\", \n  \"no_pengawasan_tugas\": \"PEMERIKSAAN-001-{{$randomInt}}\",\n  \"no_urut_klien_internal\": \"KLIEN-INT-001\",\n  \"no_kontrak\": \"KTR/PEM/2024/001-{{$randomInt}}\",\n  \"tgl_kontrak\": \"2024-03-01\",\n  \"no_sp2\": \"SP2/WPJ.07/KP.0101/{{$randomInt}}\",\n  \"tgl_sp2\": \"2024-03-15\",\n  \"no_sphp\": \"SPHP/WPJ.07/KP.0101/{{$randomInt}}\",\n  \"tgl_sphp\": \"2024-04-20\",\n  \"no_lhp\": \"LHP/WPJ.07/KP.0101/{{$randomInt}}\",\n  \"tgl_lhp\": \"2024-05-10\",\n  \"status\": \"BARU\",\n  \"catatan\": \"Pemeriksaan pajak untuk PT Contoh Sejahtera tahun 2022.\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/form-pemeriksaan-pajak",
+          "host": ["{{baseUrl}}"],
+          "path": ["form-pemeriksaan-pajak"]
+        },
+        "description": "Membuat data Form Pemeriksaan Pajak baru.\nPastikan {{sampleKlienId_forPemeriksaan}}, {{sampleStaffPjId_forPemeriksaan}}, dan {{sampleStaffAdHocId_forPemeriksaan}} (jika ada dan tidak kosong) sudah diisi dengan ID yang valid di Collection Variables.\nNomor-nomor unik menggunakan {{$randomInt}} untuk contoh."
+      },
+      "response": []
+    },
+    {
+      "name": "Get All Form Pemeriksaan Pajak",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200 - OK\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test(\"Response body is an array\", function () {",
+              "    const responseJson = pm.response.json();",
+              "    pm.expect(responseJson.data).to.be.an('array');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/form-pemeriksaan-pajak?status=BARU&klienId={{sampleKlienId_forPemeriksaan}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["form-pemeriksaan-pajak"],
+          "query": [
+            {
+              "key": "status",
+              "value": "BARU",
+              "description": "(Opsional) Filter berdasarkan status. Kosongkan untuk tidak filter.",
+              "disabled": false
+            },
+            {
+              "key": "klienId",
+              "value": "{{sampleKlienId_forPemeriksaan}}",
+              "description": "(Opsional) Filter berdasarkan ID Klien. Kosongkan untuk tidak filter.",
+              "disabled": false
+            }
+          ]
+        },
+        "description": "Mengambil daftar semua Form Pemeriksaan Pajak. Bisa difilter."
+      },
+      "response": []
+    },
+    {
+      "name": "Get Form Pemeriksaan Pajak by ID",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200 - OK\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test(\"Response data has correct ID\", function () {",
+              "    const responseJson = pm.response.json();",
+              "    pm.expect(responseJson.data.id).to.eql(pm.collectionVariables.get(\"createdFormPemeriksaanPajakId\"));",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/form-pemeriksaan-pajak/{{createdFormPemeriksaanPajakId}}",
+          "host": ["{{baseUrl}}"],
+          "path": [
+            "form-pemeriksaan-pajak",
+            "{{createdFormPemeriksaanPajakId}}"
+          ]
+        },
+        "description": "Mengambil detail Form Pemeriksaan Pajak berdasarkan ID.\nID diambil dari collection variable 'createdFormPemeriksaanPajakId'."
+      },
+      "response": []
+    },
+    {
+      "name": "Update Form Pemeriksaan Pajak by ID",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200 - OK\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test(\"Status and catatan are updated as expected\", function () {",
+              "    const responseJson = pm.response.json();",
+              "    const requestBody = JSON.parse(pm.request.body.raw);",
+              "    pm.expect(responseJson.data.status).to.eql(requestBody.status);",
+              "    pm.expect(responseJson.data.catatan).to.eql(requestBody.catatan);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"status\": \"DALAM_PROSES\",\n  \"catatan\": \"Proses pemeriksaan sedang berlangsung, menunggu dokumen tambahan dari klien.\",\n  \"no_sphp\": \"SPHP-UPD/WPJ.07/KP.0101/{{$randomInt}}\",\n  \"tgl_sphp\": \"2024-06-25\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/form-pemeriksaan-pajak/{{createdFormPemeriksaanPajakId}}",
+          "host": ["{{baseUrl}}"],
+          "path": [
+            "form-pemeriksaan-pajak",
+            "{{createdFormPemeriksaanPajakId}}"
+          ]
+        },
+        "description": "Memperbarui data Form Pemeriksaan Pajak berdasarkan ID.\nID diambil dari collection variable 'createdFormPemeriksaanPajakId'."
+      },
+      "response": []
+    },
+    {
+      "name": "Delete Form Pemeriksaan Pajak by ID",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200 - OK or 204 - No Content\", function () {",
+              "    pm.expect(pm.response.code).to.be.oneOf([200, 204]);",
+              "});",
+              "if (pm.response.code === 200) {",
+              "    pm.test(\"Response message indicates successful deletion\", function () {",
+              "        const responseJson = pm.response.json();",
+              "        pm.expect(responseJson.message).to.eql(\"Form Pemeriksaan Pajak berhasil dihapus\");",
+              "    });",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/form-pemeriksaan-pajak/{{createdFormPemeriksaanPajakId}}",
+          "host": ["{{baseUrl}}"],
+          "path": [
+            "form-pemeriksaan-pajak",
+            "{{createdFormPemeriksaanPajakId}}"
+          ]
+        },
+        "description": "Menghapus Form Pemeriksaan Pajak berdasarkan ID.\nID diambil dari collection variable 'createdFormPemeriksaanPajakId'."
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000/api/v1",
+      "type": "string",
+      "description": "Base URL untuk API. Sesuaikan port jika server Anda berjalan di port yang berbeda (misal 3000 jika PORT .env tidak diset atau 5000)."
+    },
+    {
+      "key": "createdFormPemeriksaanPajakId",
+      "value": "",
+      "type": "string",
+      "description": "Akan diisi otomatis oleh script test pada request 'Create Form Pemeriksaan Pajak'."
+    },
+    {
+      "key": "sampleKlienId_forPemeriksaan",
+      "value": "ISI_DENGAN_ID_KLIEN_VALID",
+      "type": "string",
+      "description": "PENTING: Ganti dengan ID Klien yang valid dari database Anda."
+    },
+    {
+      "key": "sampleStaffPjId_forPemeriksaan",
+      "value": "ISI_DENGAN_ID_PENGGUNA_VALID_SEBAGAI_PJ",
+      "type": "string",
+      "description": "PENTING: Ganti dengan ID Pengguna (Staff) yang valid untuk Staff PJ."
+    },
+    {
+      "key": "sampleStaffAdHocId_forPemeriksaan",
+      "value": "",
+      "type": "string",
+      "description": "Opsional: Kosongkan jika tidak ada, atau ganti dengan ID Pengguna yang valid untuk Staff Ad Hoc (jika ingin diisi)."
+    }
+  ]
+}

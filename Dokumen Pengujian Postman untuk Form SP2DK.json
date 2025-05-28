@@ -1,0 +1,254 @@
+{
+  "info": {
+    "_postman_id": "c4d5e6f7-g8h9-0123-4567-abcdef123456",
+    "name": "SigmaSamitra - Form SP2DK CRUD",
+    "description": "Koleksi untuk menguji endpoint CRUD Form SP2DK pada API Backend SigmaSamitra (berdasarkan struktur Excel).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Create Form SP2DK",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 201 - Created\", function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "const responseJson = pm.response.json();",
+              "pm.test(\"Response body has correct structure and message\", function () {",
+              "    pm.expect(responseJson.message).to.eql(\"Form SP2DK berhasil dibuat\");",
+              "    pm.expect(responseJson.data).to.be.an('object');",
+              "    pm.expect(responseJson.data.id).to.be.a('string');",
+              "    const requestBody = JSON.parse(pm.request.body.raw);",
+              "    pm.expect(responseJson.data.no_sp2dk).to.eql(requestBody.no_sp2dk);",
+              "});",
+              "// Simpan ID yang baru dibuat ke collection variable",
+              "if (responseJson.data && responseJson.data.id) {",
+              "    pm.collectionVariables.set(\"createdFormSp2dkId\", responseJson.data.id);",
+              "    console.log(\"createdFormSp2dkId saved: \" + responseJson.data.id);",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"klienId\": \"{{sampleKlienId_forSP2DK}}\",\n  \"staffPjId\": \"{{sampleStaffPjId_forSP2DK}}\",\n  \"staffAdHocId\": \"{{sampleStaffAdHocId_forSP2DK}}\",\n  \"no_pengawasan_tugas\": \"SP2DK-TASK-{{$randomInt}}\",\n  \"no_urut_klien_internal\": \"SP2DK-KLIEN-{{$randomInt}}\",\n  \"no_kontrak\": \"KTR/SP2DK/{{$randomInt}}\",\n  \"tgl_kontrak\": \"2024-01-20\",\n  \"no_sp2dk\": \"SP2DK-{{$randomInt}}/PJ/2024\",\n  \"tgl_sp2dk\": \"2024-02-10\",\n  \"no_sphp\": \"SPHP-SP2DK-{{$randomInt}}/PJ/2024\",\n  \"tgl_sphp\": \"2024-03-15\",\n  \"no_lhp\": \"LHP-SP2DK-{{$randomInt}}/PJ/2024\",\n  \"tgl_lhp\": \"2024-04-05\",\n  \"tgl_bayar\": \"2024-04-10\",\n  \"tgl_lapor\": \"2024-04-12\",\n  \"status\": \"BARU\",\n  \"catatan_sp2dk\": \"Form SP2DK awal untuk Klien B.\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/form-sp2dk",
+          "host": ["{{baseUrl}}"],
+          "path": ["form-sp2dk"]
+        },
+        "description": "Membuat data Form SP2DK baru.\nPastikan {{sampleKlienId_forSP2DK}}, {{sampleStaffPjId_forSP2DK}}, dan {{sampleStaffAdHocId_forSP2DK}} (jika ada dan tidak kosong) sudah diisi dengan ID yang valid di Collection Variables.\nNomor-nomor unik menggunakan {{$randomInt}} untuk contoh."
+      },
+      "response": []
+    },
+    {
+      "name": "Get All Form SP2DK",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200 - OK\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test(\"Response body is an array\", function () {",
+              "    const responseJson = pm.response.json();",
+              "    pm.expect(responseJson.data).to.be.an('array');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/form-sp2dk?status=BARU&klienId={{sampleKlienId_forSP2DK}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["form-sp2dk"],
+          "query": [
+            {
+              "key": "status",
+              "value": "BARU",
+              "description": "(Opsional) Filter berdasarkan status.",
+              "disabled": false
+            },
+            {
+              "key": "klienId",
+              "value": "{{sampleKlienId_forSP2DK}}",
+              "description": "(Opsional) Filter berdasarkan ID Klien.",
+              "disabled": false
+            }
+          ]
+        },
+        "description": "Mengambil daftar semua Form SP2DK. Bisa difilter."
+      },
+      "response": []
+    },
+    {
+      "name": "Get Form SP2DK by ID",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200 - OK\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test(\"Response data has correct ID\", function () {",
+              "    const responseJson = pm.response.json();",
+              "    pm.expect(responseJson.data.id).to.eql(pm.collectionVariables.get(\"createdFormSp2dkId\"));",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/form-sp2dk/{{createdFormSp2dkId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["form-sp2dk", "{{createdFormSp2dkId}}"]
+        },
+        "description": "Mengambil detail Form SP2DK berdasarkan ID.\nID diambil dari collection variable 'createdFormSp2dkId'."
+      },
+      "response": []
+    },
+    {
+      "name": "Update Form SP2DK by ID",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200 - OK\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test(\"Status and catatan are updated as expected\", function () {",
+              "    const responseJson = pm.response.json();",
+              "    const requestBody = JSON.parse(pm.request.body.raw);",
+              "    pm.expect(responseJson.data.status).to.eql(requestBody.status);",
+              "    pm.expect(responseJson.data.catatan_sp2dk).to.eql(requestBody.catatan_sp2dk);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"status\": \"DALAM_PROSES\",\n  \"catatan_sp2dk\": \"Klarifikasi sedang disiapkan oleh tim.\",\n  \"tgl_lapor\": \"2024-05-20\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/form-sp2dk/{{createdFormSp2dkId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["form-sp2dk", "{{createdFormSp2dkId}}"]
+        },
+        "description": "Memperbarui data Form SP2DK berdasarkan ID.\nID diambil dari collection variable 'createdFormSp2dkId'."
+      },
+      "response": []
+    },
+    {
+      "name": "Delete Form SP2DK by ID",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200 - OK or 204 - No Content\", function () {",
+              "    pm.expect(pm.response.code).to.be.oneOf([200, 204]);",
+              "});",
+              "if (pm.response.code === 200) {",
+              "    pm.test(\"Response message indicates successful deletion\", function () {",
+              "        const responseJson = pm.response.json();",
+              "        pm.expect(responseJson.message).to.eql(\"Form SP2DK berhasil dihapus\");",
+              "    });",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/form-sp2dk/{{createdFormSp2dkId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["form-sp2dk", "{{createdFormSp2dkId}}"]
+        },
+        "description": "Menghapus Form SP2DK berdasarkan ID.\nID diambil dari collection variable 'createdFormSp2dkId'."
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000/api/v1",
+      "type": "string",
+      "description": "Base URL untuk API. Sesuaikan port jika server Anda berjalan di port yang berbeda."
+    },
+    {
+      "key": "createdFormSp2dkId",
+      "value": "",
+      "type": "string",
+      "description": "Akan diisi otomatis oleh script test pada request 'Create Form SP2DK'."
+    },
+    {
+      "key": "sampleKlienId_forSP2DK",
+      "value": "ISI_DENGAN_ID_KLIEN_VALID",
+      "type": "string",
+      "description": "PENTING: Ganti dengan ID Klien yang valid dari database Anda."
+    },
+    {
+      "key": "sampleStaffPjId_forSP2DK",
+      "value": "ISI_DENGAN_ID_PENGGUNA_VALID_SEBAGAI_PJ",
+      "type": "string",
+      "description": "PENTING: Ganti dengan ID Pengguna (Staff) yang valid untuk Staff PJ."
+    },
+    {
+      "key": "sampleStaffAdHocId_forSP2DK",
+      "value": "",
+      "type": "string",
+      "description": "Opsional: Kosongkan jika tidak ada, atau ganti dengan ID Pengguna yang valid untuk Staff Ad Hoc."
+    }
+  ]
+}

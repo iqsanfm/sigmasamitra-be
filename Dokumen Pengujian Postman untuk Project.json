@@ -1,0 +1,254 @@
+{
+  "info": {
+    "_postman_id": "g0h1i2j3-k4l5-6789-0123-bcdfgh123456",
+    "name": "SigmaSamitra - Project CRUD",
+    "description": "Koleksi untuk menguji endpoint CRUD Project pada API Backend SigmaSamitra.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Create Project",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 201 - Created\", function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "const responseJson = pm.response.json();",
+              "pm.test(\"Response body has correct structure and message for new Project\", function () {",
+              "    pm.expect(responseJson.message).to.eql(\"Project berhasil dibuat\");",
+              "    pm.expect(responseJson.data).to.be.an('object');",
+              "    pm.expect(responseJson.data.id).to.be.a('string');",
+              "    const requestBody = JSON.parse(pm.request.body.raw);",
+              "    pm.expect(responseJson.data.nama_project).to.eql(requestBody.nama_project);",
+              "});",
+              "// Simpan ID project yang baru dibuat ke collection variable",
+              "if (responseJson.data && responseJson.data.id) {",
+              "    pm.collectionVariables.set(\"createdProjectId\", responseJson.data.id);",
+              "    console.log(\"createdProjectId saved: \" + responseJson.data.id);",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nama_project\": \"Proyek Pendampingan Audit {{$randomInt}}\",\n  \"klienId\": \"{{sampleKlienId_forProject}}\",\n  \"picId\": \"{{samplePicId_forProject}}\",\n  \"deskripsi\": \"Pendampingan proses audit pajak tahunan untuk klien.\",\n  \"tanggal_mulai\": \"2024-06-01\",\n  \"tanggal_target_selesai\": \"2024-09-30\",\n  \"status_project\": \"BARU\",\n  \"nilai_project\": \"25000000.00\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/projects",
+          "host": ["{{baseUrl}}"],
+          "path": ["projects"]
+        },
+        "description": "Membuat data Project baru.\nPastikan {{sampleKlienId_forProject}} dan {{samplePicId_forProject}} sudah diisi dengan ID yang valid di Collection Variables.\nNama project menggunakan {{$randomInt}} untuk contoh agar unik."
+      },
+      "response": []
+    },
+    {
+      "name": "Get All Projects",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200 - OK\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test(\"Response body is an array\", function () {",
+              "    const responseJson = pm.response.json();",
+              "    pm.expect(responseJson.data).to.be.an('array');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/projects?status_project=BARU&klienId={{sampleKlienId_forProject}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["projects"],
+          "query": [
+            {
+              "key": "status_project",
+              "value": "BARU",
+              "description": "(Opsional) Filter berdasarkan status project.",
+              "disabled": false
+            },
+            {
+              "key": "klienId",
+              "value": "{{sampleKlienId_forProject}}",
+              "description": "(Opsional) Filter berdasarkan ID Klien.",
+              "disabled": false
+            },
+            {
+              "key": "picId",
+              "value": "{{samplePicId_forProject}}",
+              "description": "(Opsional) Filter berdasarkan ID PIC.",
+              "disabled": true
+            }
+          ]
+        },
+        "description": "Mengambil daftar semua Project. Bisa difilter menggunakan query parameters."
+      },
+      "response": []
+    },
+    {
+      "name": "Get Project by ID",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200 - OK\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test(\"Response data has correct ID\", function () {",
+              "    const responseJson = pm.response.json();",
+              "    pm.expect(responseJson.data.id).to.eql(pm.collectionVariables.get(\"createdProjectId\"));",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/projects/{{createdProjectId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["projects", "{{createdProjectId}}"]
+        },
+        "description": "Mengambil detail Project berdasarkan ID.\nID diambil dari collection variable 'createdProjectId'."
+      },
+      "response": []
+    },
+    {
+      "name": "Update Project by ID",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200 - OK\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test(\"Status project and deskripsi are updated as expected\", function () {",
+              "    const responseJson = pm.response.json();",
+              "    const requestBody = JSON.parse(pm.request.body.raw);",
+              "    pm.expect(responseJson.data.status_project).to.eql(requestBody.status_project);",
+              "    pm.expect(responseJson.data.deskripsi).to.eql(requestBody.deskripsi);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"status_project\": \"DALAM_PROSES\",\n  \"deskripsi\": \"Proses pendampingan audit telah dimulai, pengumpulan data awal.\",\n  \"tanggal_aktual_selesai\": null,\n  \"nilai_project\": \"26000000.50\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/projects/{{createdProjectId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["projects", "{{createdProjectId}}"]
+        },
+        "description": "Memperbarui data Project berdasarkan ID.\nID diambil dari collection variable 'createdProjectId'."
+      },
+      "response": []
+    },
+    {
+      "name": "Delete Project by ID",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200 - OK or 204 - No Content\", function () {",
+              "    pm.expect(pm.response.code).to.be.oneOf([200, 204]);",
+              "});",
+              "if (pm.response.code === 200) {",
+              "    pm.test(\"Response message indicates successful deletion\", function () {",
+              "        const responseJson = pm.response.json();",
+              "        pm.expect(responseJson.message).to.eql(\"Project berhasil dihapus\");",
+              "    });",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/projects/{{createdProjectId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["projects", "{{createdProjectId}}"]
+        },
+        "description": "Menghapus Project berdasarkan ID.\nID diambil dari collection variable 'createdProjectId'."
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000/api/v1",
+      "type": "string",
+      "description": "Base URL untuk API. Sesuaikan port jika server Anda berjalan di port yang berbeda."
+    },
+    {
+      "key": "createdProjectId",
+      "value": "",
+      "type": "string",
+      "description": "Akan diisi otomatis oleh script test pada request 'Create Project'."
+    },
+    {
+      "key": "sampleKlienId_forProject",
+      "value": "ISI_DENGAN_ID_KLIEN_VALID",
+      "type": "string",
+      "description": "PENTING: Ganti dengan ID Klien yang valid dari database Anda."
+    },
+    {
+      "key": "samplePicId_forProject",
+      "value": "ISI_DENGAN_ID_PENGGUNA_VALID_SEBAGAI_PIC",
+      "type": "string",
+      "description": "PENTING: Ganti dengan ID Pengguna (Staff) yang valid untuk menjadi PIC Project."
+    }
+  ]
+}
